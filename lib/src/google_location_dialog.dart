@@ -11,6 +11,7 @@ typedef OnSelectAddress = FutureOr<void> Function(GoogleAddress address);
 /// Callback called when user press keyboard main button or search icon
 /// in [_SearchBar]. Used to search address
 typedef OnSearchAddress = FutureOr<void> Function();
+typedef StringCallback = void Function(String);
 
 class DialogTexts {
   DialogTexts({
@@ -31,6 +32,7 @@ class GooglePlacesDialog extends StatefulWidget {
     required AddressSearcherClient addressSearcherClient,
     required OnSelectAddress onSelectedAddress,
     required DialogTexts dialogTexts,
+    this.queryCallback,
     super.key,
   })  : _onSelectedAddress = onSelectedAddress,
         _addressSearcherClient = addressSearcherClient,
@@ -39,6 +41,7 @@ class GooglePlacesDialog extends StatefulWidget {
   final AddressSearcherClient _addressSearcherClient;
   final OnSelectAddress _onSelectedAddress;
   final DialogTexts _dialogTexts;
+  final StringCallback? queryCallback;
 
   @override
   State<GooglePlacesDialog> createState() => _GooglePlacesDialog();
@@ -77,6 +80,7 @@ class _GooglePlacesDialog extends State<GooglePlacesDialog> {
                 children: <Widget>[
                   _SearchBar(
                     controller: _controller,
+                    onChangedCallback: widget.queryCallback,
                     onSearchAddress: () => _searchLocation(innerSetState),
                     searchHint: widget._dialogTexts.searchHint,
                   ),
@@ -176,6 +180,7 @@ class _SearchBar extends StatelessWidget {
   _SearchBar({
     required TextEditingController controller,
     required OnSearchAddress onSearchAddress,
+    required this.onChangedCallback,
     required String searchHint,
   })  : _onSearchAddress = onSearchAddress,
         _controller = controller,
@@ -184,6 +189,7 @@ class _SearchBar extends StatelessWidget {
   final TextEditingController _controller;
   final OnSearchAddress _onSearchAddress;
   final String _searchHint;
+  final StringCallback? onChangedCallback;
 
   final Debouncer _debouncer = Debouncer();
 
@@ -201,6 +207,7 @@ class _SearchBar extends StatelessWidget {
                   autofocus: true,
                   onEditingComplete: _onSearchAddress,
                   onChanged: (val) {
+                    onChangedCallback?.call(val);
                     _debouncer.debounce(
                       const Duration(milliseconds: 600),
                       _onSearchAddress,
